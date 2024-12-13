@@ -44,8 +44,6 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   network_profile {
     network_plugin    = "azure"
   }
-
-  http_application_routing_enabled = true
 }
 
 resource "azapi_update_resource" "k8s-default-node-pool-systempool-taint" {

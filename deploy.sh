@@ -64,3 +64,5 @@ kubectl apply -n kuberay -f ray-job.pytorch-mnist.yaml
 # Output the pods in the kuberay namespace
 kubectl get pods -n kuberay
 
+# Create an ingress controller for the KubeRay dashboard
+

@@ -276,3 +276,8 @@ Test Epoch 9: 100%|██████████| 313/313 [00:01<00:00, 267.35i
 ```
 
 ## View the Training Results on the Ray Dashboard
+
+## Contributors
+
+- Russell De Pina (Principal Technical Program Manager - Microsoft)
+- Kenneth Kilty (Principal Technical Program Manager - Microsoft)
