@@ -1,0 +1,1 @@
+{"rule":"MORFOLOGIK_RULE_EN_US","sentence":"^\\QTo view the logs of the RayJob, run the following command (make sure to replace \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q with the name of the pod running your RayJob):\\E$"}
