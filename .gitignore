@@ -39,3 +39,4 @@ terraform.rc
 # Ignore lab files
 ray-job.pytorch-mnist.yaml
 main.tfplan
+.terraform.lock.hcl

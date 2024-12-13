@@ -33,11 +33,16 @@ echo "Current Kubernetes Context: $current_context"
 # Output the nodes in the cluster
 kubectl get nodes
 
-# Install KubeRay Helm chart
+# Check Helm version
 helm version
+
+# Add the KubeRay Helm repository
 helm repo add kuberay https://ray-project.github.io/kuberay-helm/
+
+# Update the Helm repository
 helm repo update
 
+# Install or upgrade the KubeRay operator using Helm
 helm upgrade \
 --install \
 --cleanup-on-fail \
@@ -47,13 +52,15 @@ helm upgrade \
 --create-namespace kuberay-operator kuberay/kuberay-operator \
 --version 1.1.1
 
+# Output the pods in the kuberay namespace
 kubectl get pods -n $kuberay_namespace
 
-# Train a PyTorch Model on Fashion MNIST
-
+# Download the PyTorch MNIST job YAML file
 curl -LO https://raw.githubusercontent.com/ray-project/kuberay/master/ray-operator/config/samples/pytorch-mnist/ray-job.pytorch-mnist.yaml
 
+# Train a PyTorch Model on Fashion MNIST
 kubectl apply -n kuberay -f ray-job.pytorch-mnist.yaml
 
+# Output the pods in the kuberay namespace
 kubectl get pods -n kuberay
 

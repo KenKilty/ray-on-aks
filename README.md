@@ -3,6 +3,14 @@
 
 In this article, we will deploy a Ray cluster on an Azure Kubernetes Service (AKS) cluster using the KubeRay operator. You will use the Ray Cluster to train a simple machine learning model and display the results on the Ray Dashboard running on the AKS cluster.
 
+## What is Ray?
+
+Ray is an open-source project developed at UC Berkeley's RISE Lab that provides a unified framework for scaling AI and Python applications. It consists of a core distributed runtime and a set of AI libraries designed to accelerate machine learning workloads. Ray simplifies the process of running compute-intensive Python tasks at massive scale, allowing developers to seamlessly scale their applications from a single laptop to a large cluster. The framework supports various machine learning tasks, including distributed training, hyperparameter tuning, reinforcement learning, and production model serving. You can find out more about Ray [here](https://github.com/ray-project/ray).
+
+## What is KubeRay?
+
+KubeRay is an open-source project that provides a Kubernetes operator for deploying and managing Ray clusters on Kubernetes. The operator simplifies the process of deploying and managing Ray clusters on Kubernetes by automating the deployment, scaling, and monitoring of Ray clusters. It provides a declarative way to define Ray clusters using Kubernetes custom resources, making it easy to manage Ray clusters alongside other Kubernetes resources. You can find out more about KubeRay [here](https://github.com/ray-project/kuberay).
+
 ## Prerequisites
 
 Before you begin, you will need the following:
@@ -23,6 +31,15 @@ The sample includes a script that will:
 1. Installs Helm Ray repository and deploys [Ray Operator (KubeRay)](https://docs.ray.io/en/latest/cluster/kubernetes/index.html) to the AKS cluster via Helm.
 1. Downloads and executes a [Ray Job](https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html) YAML manifest from the Ray Github samples repo to perform an Image classification ([MNIST](https://github.com/cvdfoundation/mnist) dataset) using Convnets ([convolutional neural network](https://techcommunity.microsoft.com/discussions/machinelearning/what-is-convolutional-neural-network-%E2%80%94-cnn-deep-learning/4184725)).
 1. Outputs the logs from the Ray job presenting an overview of the machine learning process performed by Ray.
+
+Clone the repo locally and change to the root of the local repo. To execute the sample end to end non-interatively run the following command:
+
+```bash
+chmod +x deploy.sh  
+./deploy.sh   
+```
+
+Review the output of the logs and view the resource group in the Azure Portal to review the infrastructure that was created.
 
 ## Manually Deploy Sample to AKS (Step-by-Step)
 
