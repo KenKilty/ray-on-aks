@@ -59,10 +59,67 @@ kubectl get pods -n $kuberay_namespace
 curl -LO https://raw.githubusercontent.com/ray-project/kuberay/master/ray-operator/config/samples/pytorch-mnist/ray-job.pytorch-mnist.yaml
 
 # Train a PyTorch Model on Fashion MNIST
-kubectl apply -n kuberay -f ray-job.pytorch-mnist.yaml
+kubectl apply -n $kuberay_namespace -f ray-job.pytorch-mnist.yaml
 
 # Output the pods in the kuberay namespace
-kubectl get pods -n kuberay
+kubectl get pods -n $kuberay_namespace
 
-# Create an ingress controller for the KubeRay dashboard
+# Get the status of the Ray job
+job_status=$(kubectl get rayjobs -n $kuberay_namespace -o jsonpath='{.items[0].status.jobDeploymentStatus}')
 
+# Wait for the Ray job to complete
+while [ "$job_status" != "Complete" ]; do
+    echo -ne "Job Status: $job_status\\r"
+    sleep 30
+    job_status=$(kubectl get rayjobs -n $kuberay_namespace -o jsonpath='{.items[0].status.jobDeploymentStatus}')
+done
+echo "Job Status: $job_status"
+
+# Check if the job succeeded
+job_status=$(kubectl get rayjobs -n $kuberay_namespace -o jsonpath='{.items[0].status.jobStatus}')
+
+if [ "$job_status" != "SUCCEEDED" ]; then
+    echo "Job Failed!"
+    exit 1
+fi
+
+# If the job succeeded, get the Ray cluster head service
+rayclusterhead=$(kubectl get service -n $kuberay_namespace | grep 'rayjob-pytorch-mnist-raycluster' | grep 'ClusterIP' | awk '{print $1}')
+
+# Now create a service of type NodePort for the Ray cluster head
+kubectl expose service $rayclusterhead \
+-n $kuberay_namespace \
+--port=80 \
+--target-port=8265 \
+--type=NodePort \
+--name=ray-dash
+
+# Create an ingress for the KubeRay dashboard
+cat <<EOF | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ray-dash
+  namespace: kuberay
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: webapprouting.kubernetes.azure.com
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: ray-dash
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+EOF
+
+# Now find the public IP address of the ingress controller
+lb_public_ip=$(kc get svc -n app-routing-system -o jsonpath='{.items[?(@.metadata.name == "nginx")].status.loadBalancer.ingress[0].ip}')
+
+echo "KubeRay Dashboard URL: http://$lb_public_ip/"
+
+exit 0
