@@ -17,11 +17,12 @@ resource "random_pet" "azurerm_kubernetes_cluster_dns_prefix" {
 }
 
 resource "azurerm_kubernetes_cluster" "k8s" {
-  location            = azurerm_resource_group.rg.location
-  name                = random_pet.azurerm_kubernetes_cluster_name.id
-  resource_group_name = azurerm_resource_group.rg.name
-  dns_prefix          = random_pet.azurerm_kubernetes_cluster_dns_prefix.id
-
+  location                         = azurerm_resource_group.rg.location
+  name                             = random_pet.azurerm_kubernetes_cluster_name.id
+  resource_group_name              = azurerm_resource_group.rg.name
+  dns_prefix                       = random_pet.azurerm_kubernetes_cluster_dns_prefix.id
+  http_application_routing_enabled = true
+    
   identity {
     type = "SystemAssigned"
   }
@@ -43,6 +44,10 @@ resource "azurerm_kubernetes_cluster" "k8s" {
 
   network_profile {
     network_plugin    = "azure"
+  }
+
+  web_app_routing {
+    dns_zone_ids = []
   }
 }
 
