@@ -17,11 +17,12 @@ resource "random_pet" "azurerm_kubernetes_cluster_dns_prefix" {
 }
 
 resource "azurerm_kubernetes_cluster" "k8s" {
-  location            = azurerm_resource_group.rg.location
-  name                = random_pet.azurerm_kubernetes_cluster_name.id
-  resource_group_name = azurerm_resource_group.rg.name
-  dns_prefix          = random_pet.azurerm_kubernetes_cluster_dns_prefix.id
-
+  location                         = azurerm_resource_group.rg.location
+  name                             = random_pet.azurerm_kubernetes_cluster_name.id
+  resource_group_name              = azurerm_resource_group.rg.name
+  dns_prefix                       = random_pet.azurerm_kubernetes_cluster_dns_prefix.id
+  http_application_routing_enabled = true
+    
   identity {
     type = "SystemAssigned"
   }
@@ -44,6 +45,23 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   network_profile {
     network_plugin    = "azure"
   }
+
+  web_app_routing {
+    dns_zone_ids = []
+  }
+}
+
+resource "null_resource" "wait_for_aks" {
+    depends_on = [azurerm_kubernetes_cluster.k8s]
+
+  provisioner "local-exec" {
+    command = <<EOT
+      while [ "$(az aks show --resource-group ${azurerm_resource_group.rg.name} --name ${azurerm_kubernetes_cluster.aks_cluster.name} --query "provisioningState" -o tsv)" != "Succeeded" ]; do
+        echo "Waiting for AKS cluster to be fully provisioned..."
+        sleep 30
+      done
+    EOT
+  }
 }
 
 resource "azapi_update_resource" "k8s-default-node-pool-systempool-taint" {
@@ -60,7 +78,7 @@ resource "azapi_update_resource" "k8s-default-node-pool-systempool-taint" {
     }
   })
 
-  depends_on = [azurerm_kubernetes_cluster.k8s]
+  depends_on = [null_resource.wait_for_aks]
 }
 
 resource "azurerm_kubernetes_cluster_node_pool" "workload" {

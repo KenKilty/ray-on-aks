@@ -277,7 +277,68 @@ Test Epoch 9: 100%|██████████| 313/313 [00:01<00:00, 267.35i
 
 ## View the Training Results on the Ray Dashboard
 
+When the RayJob completes successfully, you can view the training results on the Ray Dashboard. The Ray Dashboard is a web-based interface that provides real-time monitoring and visualization of Ray clusters. You can use the Ray Dashboard to monitor the status of Ray clusters, view logs, and visualize the results of machine learning jobs. To access the Ray Dashboard, you will need to expose the Ray head service to the public internet. To do this, you will need to create a "service shim" to expose the Ray head service on port 80 instead of port 8265.
+
+>Note: The `deploy.sh` described in the previous section will automatically expose the Ray head service to the public internet. The following steps are included in the `deploy.sh` script.
+
+First, get the name of the Ray head service and save it in a shell variable by running the following command:
+
+```bash
+rayclusterhead=$(kubectl get service -n $kuberay_namespace | grep 'rayjob-pytorch-mnist-raycluster' | grep 'ClusterIP' | awk '{print $1}')
+```
+
+Next, create a service "shim" to expose the Ray head service on port 80 by running the following command:
+
+```bash
+kubectl expose service $rayclusterhead \
+-n $kuberay_namespace \
+--port=80 \
+--target-port=8265 \
+--type=NodePort \
+--name=ray-dash
+```
+
+Create the ingress to expose the service "shim" using the ingress controller by running the following command:
+
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ray-dash
+  namespace: kuberay
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: webapprouting.kubernetes.azure.com
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: ray-dash
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+EOF
+```
+
+Finally, get the public IP address of the ingress controller by running the following command:
+
+```bash
+kubectl get service -n app-routing-system
+```
+
+You should see the public IP address of the load balancer attached to the ingress controller. Copy the public IP address and paste it into a web browser. You should see the Ray Dashboard, which looks like this:
+
+![Ray Dashboard](images/ray-dashboard.jpg)
+
+## Clean Up
+
+To clean up the resources created in this guide, you can delete the Azure Resource Group that contains the AKS cluster.
+
 ## Contributors
 
-- Russell De Pina (Principal Technical Program Manager - Microsoft)
+- Russell de Pina (Principal Technical Program Manager - Microsoft)
 - Kenneth Kilty (Principal Technical Program Manager - Microsoft)
